@@ -4,6 +4,17 @@
 .idea/**/usage.statistics.xml
 .idea/**/dictionaries
 .idea/**/shelf
+.idea/.name
+.idea/codeStyles/codeStyleConfig.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/codeStyles/Project.xml
+.bsp/sbt.json
+.idea/sbt.xml
+.idea/scala_compiler.xml
+.idea/modules/typelevel-project.iml
+.idea/modules/typelevel-project-build.iml
+.idea/vcs.xml
 
 # AWS User-specific
 .idea/**/aws.xml
@@ -148,3 +159,4 @@ project/plugins/project/
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 
 # End of https://www.toptal.com/developers/gitignore/api/java,scala,sbt,intellij
+

@@ -15,7 +15,6 @@ object CatsEffect extends IOApp.Simple {
     Describing computation as values
   */
   // IO = data structure describing arbitrary computations (including side effects)
-
   val firstIO: IO[Int] = IO.pure(42)
   val delayedIO: IO[Int] = IO/*.apply*/ {
     // Complex code

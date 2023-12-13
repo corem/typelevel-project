@@ -155,8 +155,13 @@ project/plugins/project/
 .lib/
 
 ### Scala ###
-
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-
-# End of https://www.toptal.com/developers/gitignore/api/java,scala,sbt,intellij
-
+.bloop/*
+.metals/*
+.vscode/settings.json
+project/metals.sbt
+project/.bloop/bloop.settings.json
+project/.bloop/typelevel-fullstack-build.json
+project/project/metals.sbt
+project/project/.bloop/bloop.settings.json
+project/project/.bloop/typelevel-fullstack-build-build.json
+project/project/project/metals.sbt

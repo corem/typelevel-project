@@ -10,31 +10,31 @@ object Doobie extends IOApp.Simple {
 
   case class Student(id: Int, name: String)
 
-  val xa: Transactor[IO] = Transactor.fromDriverManager[IO] (
-    "org.postgresql.Driver", // JDBC Connector
+  val xa: Transactor[IO] = Transactor.fromDriverManager[IO](
+    "org.postgresql.Driver",                 // JDBC Connector
     "jdbc:postgresql://localhost:5432/demo", // Database URL
-    "docker", // Username
-    "docker" // Password
+    "docker",                                // Username
+    "docker"                                 // Password
   )
 
   def findAllStudentNames: IO[List[String]] = {
-    val query = sql"select name from students".query[String]
+    val query  = sql"select name from students".query[String]
     val action = query.to[List]
     action.transact(xa)
   }
 
   def saveStudent(id: Int, name: String): IO[Int] = {
-    val query = sql"insert into students(id, name) values ($id, $name)"
+    val query  = sql"insert into students(id, name) values ($id, $name)"
     val action = query.update.run
     action.transact(xa)
   }
 
   def findStudentsByInitial(letter: String): IO[List[Student]] = {
     val selectPart = fr"select id, name"
-    val fromPart = fr"from students"
-    val wherePart = fr"where left(name, 1) = $letter"
-    val statement = selectPart ++ fromPart ++ wherePart
-    val action = statement.query[Student].to[List]
+    val fromPart   = fr"from students"
+    val wherePart  = fr"where left(name, 1) = $letter"
+    val statement  = selectPart ++ fromPart ++ wherePart
+    val action     = statement.query[Student].to[List]
     action.transact(xa)
   }
 
@@ -54,27 +54,29 @@ object Doobie extends IOApp.Simple {
         sql"select id, name from students".query[Student].to[List].transact(xa)
 
       def create(name: String): F[Int] =
-        sql"insert into students(name) values ($name)".update.withUniqueGeneratedKeys[Int]("id").transact(xa)
+        sql"insert into students(name) values ($name)".update
+          .withUniqueGeneratedKeys[Int]("id")
+          .transact(xa)
     }
   }
 
   val postgresResource = for {
     ec <- ExecutionContexts.fixedThreadPool[IO](16)
     xa <- HikariTransactor.newHikariTransactor[IO](
-      "org.postgresql.Driver", // JDBC Connector
+      "org.postgresql.Driver",                 // JDBC Connector
       "jdbc:postgresql://localhost:5432/demo", // Database URL
-      "docker", // Username
-      "docker", // Password
+      "docker",                                // Username
+      "docker",                                // Password
       ec
     )
   } yield xa
 
-  val smallProgram = postgresResource.use { xa => 
+  val smallProgram = postgresResource.use { xa =>
     val studentsRepo = Students.make[IO](xa)
     for {
-      id <- studentsRepo.create("Roland")
+      id     <- studentsRepo.create("Roland")
       roland <- studentsRepo.findById(id)
-      _ <- IO.println(s"The first student is $roland")
+      _      <- IO.println(s"The first student is $roland")
     } yield ()
   }
 

@@ -20,21 +20,26 @@ import pureconfig.ConfigReader
 import pureconfig.error.ConfigReaderException
 import com.corem.jobsboard.config.*
 import com.corem.jobsboard.config.syntax.*
-import com.corem.jobsboard.http.HttpApi
+import com.corem.jobsboard.modules.*
 import com.corem.jobsboard.config.syntax.loadF
 
-
 object Application extends IOApp.Simple {
-    
+
   given logger: Logger[IO] = Slf4jLogger.getLogger[IO]
 
   override def run = ConfigSource.default.loadF[IO, EmberConfig].flatMap { config =>
-    EmberServerBuilder
-      .default[IO]
-      .withHost(config.host)
-      .withPort(config.port)
-      .withHttpApp(HttpApi[IO].endpoints.orNotFound)
-      .build
-      .use(_ => IO.println("Server ready!") *> IO.never)
+    val appResource = for {
+      core    <- Core[IO]
+      httpApi <- HttpApi[IO](core)
+      server <- EmberServerBuilder
+        .default[IO]
+        .withHost(config.host)
+        .withPort(config.port)
+        .withHttpApp(httpApi.endpoints.orNotFound)
+        .build
+
+    } yield server
+
+    appResource.use(_ => IO.println("Server ready!") *> IO.never)
   }
 }

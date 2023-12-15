@@ -1,4 +1,4 @@
-package com.corem.jobsboard.http
+package com.corem.jobsboard.modules
 
 import org.http4s.*
 import org.http4s.dsl.*
@@ -10,9 +10,9 @@ import org.typelevel.log4cats.Logger
 
 import com.corem.jobsboard.http.routes.*
 
-class HttpApi[F[_]: Concurrent: Logger] private {
+class HttpApi[F[_]: Concurrent: Logger] private (core: Core[F]) {
   private val healthRoutes = HealthRoutes[F].routes
-  private val jobRoutes    = JobRoutes[F].routes
+  private val jobRoutes    = JobRoutes[F](core.jobs).routes
 
   val endpoints = Router(
     "/api" -> (healthRoutes <+> jobRoutes)
@@ -20,5 +20,6 @@ class HttpApi[F[_]: Concurrent: Logger] private {
 }
 
 object HttpApi {
-  def apply[F[_]: Concurrent: Logger] = new HttpApi[F]
+  def apply[F[_]: Concurrent: Logger](core: Core[F]): Resource[F, HttpApi[F]] =
+    Resource.pure(new HttpApi[F](core))
 }

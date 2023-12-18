@@ -27,19 +27,21 @@ object Application extends IOApp.Simple {
 
   given logger: Logger[IO] = Slf4jLogger.getLogger[IO]
 
-  override def run = ConfigSource.default.loadF[IO, EmberConfig].flatMap { config =>
-    val appResource = for {
-      core    <- Core[IO]
-      httpApi <- HttpApi[IO](core)
-      server <- EmberServerBuilder
-        .default[IO]
-        .withHost(config.host)
-        .withPort(config.port)
-        .withHttpApp(httpApi.endpoints.orNotFound)
-        .build
+  override def run = ConfigSource.default.loadF[IO, AppConfig].flatMap {
+    case AppConfig(postgresConfig, emberConfig) =>
+      val appResource = for {
+        xa <- Database.makePostgresResource[IO](postgresConfig)
+        core    <- Core[IO](xa)
+        httpApi <- HttpApi[IO](core)
+        server <- EmberServerBuilder
+          .default[IO]
+          .withHost(emberConfig.host)
+          .withPort(emberConfig.port)
+          .withHttpApp(httpApi.endpoints.orNotFound)
+          .build
 
-    } yield server
+      } yield server
 
-    appResource.use(_ => IO.println("Server ready!") *> IO.never)
+      appResource.use(_ => IO.println("Server ready!") *> IO.never)
   }
 }

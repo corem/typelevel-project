@@ -10,6 +10,10 @@ import doobie.util.*
 import doobie.implicits.*
 import doobie.*
 import doobie.postgres.implicits.*
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
+import com.corem.jobsboard.domain.job.JobFilter
+import com.corem.jobsboard.domain.pagination.*
 
 class JobsSpec
     extends AsyncFreeSpec
@@ -17,7 +21,8 @@ class JobsSpec
     with Matchers
     with DoobieSpec
     with JobFixture {
-  val initScript: String = "sql/jobs.sql"
+  val initScript: String   = "sql/jobs.sql"
+  given logger: Logger[IO] = Slf4jLogger.getLogger[IO]
 
   "Jobs algebra" - {
     "should return no job if the given UUID does not exist" in {
@@ -115,6 +120,20 @@ class JobsSpec
         } yield numberOfDeletedJobs
 
         program.asserting(_ shouldBe 0)
+      }
+    }
+
+    "should filter jobs by tags" in {
+      transactor.use { xa =>
+        val program = for {
+          jobs <- LiveJobs[IO](xa)
+          filteredJobs <- jobs.all(
+            JobFilter(tags = List("scala", "cats", "zio")),
+            Pagination.default
+          )
+        } yield filteredJobs
+
+        program.asserting(_ shouldBe List(AwesomeJob))
       }
     }
   }

@@ -6,12 +6,16 @@ import doobie.*
 import doobie.implicits.*
 import doobie.util.*
 import doobie.hikari.HikariTransactor
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 import com.corem.jobsboard.core.*
 import com.corem.jobsboard.domain.job.*
 
 
 object JobsPlayground extends IOApp.Simple {
+
+  given logger: Logger[IO] = Slf4jLogger.getLogger[IO]
 
   val postgresResource: Resource[IO, HikariTransactor[IO]] =
     for {

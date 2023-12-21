@@ -17,22 +17,25 @@ import scala.collection.mutable
 
 import com.corem.jobsboard.core.*
 import com.corem.jobsboard.domain.job.*
+import com.corem.jobsboard.domain.pagination.*
 import com.corem.jobsboard.http.responses.*
 import com.corem.jobsboard.logging.syntax.*
+import com.corem.jobsboard.http.validation.syntax.*
 
-class JobRoutes[F[_]: Concurrent: Logger] private (jobs: Jobs[F]) extends Http4sDsl[F] {
+class JobRoutes[F[_]: Concurrent: Logger] private (jobs: Jobs[F]) extends HttpValidationDsl[F] {
 
-  private val database = mutable.Map[UUID, Job]()
+  object SkipQueryParem  extends OptionalQueryParamDecoderMatcher[Int]("skip")
+  object LimitQueryParem extends OptionalQueryParamDecoderMatcher[Int]("limit")
 
-  // POST /jobs?skip=0&limit=10 { filters }
-  private val allJobsRoute: HttpRoutes[F] = HttpRoutes.of[F] { case POST -> Root =>
-    for {
-      jobsList <- jobs.all()
-      resp     <- Ok(jobsList)
-    } yield resp
+  private val allJobsRoute: HttpRoutes[F] = HttpRoutes.of[F] {
+    case req @ POST -> Root :? LimitQueryParem(limit) +& SkipQueryParem(skip) =>
+      for {
+        filter   <- req.as[JobFilter]
+        jobsList <- jobs.all(filter, Pagination(limit, skip))
+        resp     <- Ok(jobsList)
+      } yield resp
   }
 
-  // GET /jobs/uuid
   private val findJobRoute: HttpRoutes[F] = HttpRoutes.of[F] { case GET -> Root / UUIDVar(id) =>
     jobs.find(id).flatMap {
       case Some(job) => Ok(job)
@@ -41,7 +44,6 @@ class JobRoutes[F[_]: Concurrent: Logger] private (jobs: Jobs[F]) extends Http4s
 
   }
 
-  // POST /jobs { jobInfo }
   private def createJob(jobInfo: JobInfo): F[Job] = {
     Job(
       id = UUID.randomUUID(),
@@ -54,27 +56,28 @@ class JobRoutes[F[_]: Concurrent: Logger] private (jobs: Jobs[F]) extends Http4s
 
   private val createJobRoute: HttpRoutes[F] = HttpRoutes.of[F] {
     case req @ POST -> Root / "create" =>
-      for {
-        jobInfo <- req.as[JobInfo].logError(e => s"Parsing payload failed: $e")
-        jobId   <- jobs.create("cornet.remi@corem.corp", jobInfo)
-        resp    <- Created(jobId)
-      } yield resp
+      req.validate[JobInfo] { jobInfo =>
+        for {
+          jobInfo <- req.as[JobInfo].logError(e => s"Parsing payload failed: $e")
+          jobId   <- jobs.create("cornet.remi@corem.corp", jobInfo)
+          resp    <- Created(jobId)
+        } yield resp
+      }
   }
 
-  // PUT /jobs/uuid { jobInfo }
   private val updateJobRoute: HttpRoutes[F] = HttpRoutes.of[F] {
     case req @ PUT -> Root / UUIDVar(id) =>
-      for {
-        jobInfo     <- req.as[JobInfo]
-        maybeNewJob <- jobs.update(id, jobInfo)
-        resp <- maybeNewJob match {
-          case Some(job) => Ok()
-          case None      => NotFound(FailureResponse(s"Cannot update job $id: not found"))
-        }
-      } yield resp
+      req.validate[JobInfo] { jobInfo =>
+        for {
+          maybeNewJob <- jobs.update(id, jobInfo)
+          resp <- maybeNewJob match {
+            case Some(job) => Ok()
+            case None      => NotFound(FailureResponse(s"Cannot update job $id: not found"))
+          }
+        } yield resp
+      }
   }
 
-  // DELETE /jobs/uuid
   private val deleteJobRoute: HttpRoutes[F] = HttpRoutes.of[F] {
     case req @ DELETE -> Root / UUIDVar(id) =>
       jobs.find(id).flatMap {

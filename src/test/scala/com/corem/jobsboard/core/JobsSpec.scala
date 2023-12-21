@@ -5,15 +5,16 @@ import cats.effect.implicits.*
 import org.scalatest.freespec.AsyncFreeSpec
 import cats.effect.testing.scalatest.AsyncIOSpec
 import org.scalatest.matchers.should.Matchers
-import com.corem.jobsboard.fixtures.JobFixture
 import doobie.util.*
 import doobie.implicits.*
 import doobie.*
 import doobie.postgres.implicits.*
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-import com.corem.jobsboard.domain.job.JobFilter
+
+import com.corem.jobsboard.domain.job.*
 import com.corem.jobsboard.domain.pagination.*
+import com.corem.jobsboard.fixtures.*
 
 class JobsSpec
     extends AsyncFreeSpec

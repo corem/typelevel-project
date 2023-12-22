@@ -11,10 +11,11 @@ import doobie.*
 import doobie.postgres.implicits.*
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-import com.corem.jobsboard.fixtures.*
-import com.corem.jobsboard.domain.user.*
 import org.scalatest.Inside
 import org.postgresql.util.PSQLException
+
+import com.corem.jobsboard.fixtures.*
+import com.corem.jobsboard.domain.user.*
 
 class UsersSpec
     extends AsyncFreeSpec

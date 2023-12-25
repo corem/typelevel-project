@@ -19,36 +19,22 @@ import tsec.mac.jca.HMACSHA256
 import tsec.authentication.JWTAuthenticator
 import tsec.authentication.IdentityStore
 import scala.concurrent.duration.*
+import cats.data.OptionT
+import tsec.jws.mac.JWTMac
+import org.http4s.headers.Authorization
 
 import com.corem.jobsboard.core.*
 import com.corem.jobsboard.domain.security.*
 import com.corem.jobsboard.domain.user.*
 import com.corem.jobsboard.domain.auth.*
-import com.corem.jobsboard.fixtures.UserFixture
-import cats.data.OptionT
-import tsec.jws.mac.JWTMac
-import org.http4s.headers.Authorization
+import com.corem.jobsboard.fixtures.*
 
 class AuthRoutesSpec
     extends AsyncFreeSpec
     with AsyncIOSpec
     with Matchers
     with Http4sDsl[IO]
-    with UserFixture {
-
-  val mockedAuthenticator: Authenticator[IO] = {
-    val key = HMACSHA256.unsafeGenerateKey
-    val idStore: IdentityStore[IO, String, User] = (email: String) =>
-      if (email == remiEmail) OptionT.pure(Remi)
-      else if (email == gastonEmail) OptionT.pure(Gaston)
-      else OptionT.none[IO, User]
-    JWTAuthenticator.unbacked.inBearerToken(
-      1.day,   // Token expiration
-      None,    // Max idle time (optional)
-      idStore, // Id Store
-      key      // Hash key
-    )
-  }
+    with SecuredRouteFixture {
 
   val mockedAuth: Auth[IO] = new Auth[IO] {
     def login(email: String, password: String): IO[Option[JwtToken]] =
@@ -78,14 +64,6 @@ class AuthRoutesSpec
 
     def authenticator: Authenticator[IO] = mockedAuthenticator
   }
-
-  extension (r: Request[IO])
-    def withBearerToken(a: JwtToken): Request[IO] = {
-      r.putHeaders {
-        val jwtString = JWTMac.toEncodedString[IO, HMACSHA256](a.jwt)
-        Authorization(Credentials.Token(AuthScheme.Bearer, jwtString))
-      }
-    }
 
   given logger: Logger[IO]       = Slf4jLogger.getLogger[IO]
   val authRoutes: HttpRoutes[IO] = AuthRoutes[IO](mockedAuth).routes

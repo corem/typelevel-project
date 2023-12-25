@@ -12,15 +12,16 @@ import com.corem.jobsboard.domain.user.*
 import tsec.authorization.AuthorizationInfo
 import cats.implicits.*
 import cats.*
-import tsec.authentication.TSecAuthService
+import tsec.authentication.{TSecAuthService, SecuredRequestHandler}
 import org.http4s.Status
 
 object security {
-  type Crypto              = HMACSHA256
-  type JwtToken            = AugmentedJWT[Crypto, String]
-  type Authenticator[F[_]] = JWTAuthenticator[F, String, User, Crypto]
-  type AuthRoute[F[_]]     = PartialFunction[SecuredRequest[F, User, JwtToken], F[Response[F]]]
-  type AuthRBAC[F[_]]      = BasicRBAC[F, Role, User, JwtToken]
+  type Crypto               = HMACSHA256
+  type JwtToken             = AugmentedJWT[Crypto, String]
+  type Authenticator[F[_]]  = JWTAuthenticator[F, String, User, Crypto]
+  type AuthRoute[F[_]]      = PartialFunction[SecuredRequest[F, User, JwtToken], F[Response[F]]]
+  type AuthRBAC[F[_]]       = BasicRBAC[F, Role, User, JwtToken]
+  type SecuredHandler[F[_]] = SecuredRequestHandler[F, String, User, JwtToken]
 
   given authRole[F[_]: Applicative]: AuthorizationInfo[F, Role, User] with {
     override def fetchInfo(u: User): F[Role] = u.role.pure[F]
@@ -37,7 +38,7 @@ object security {
 
   case class Authorizations[F[_]](rbacRoutes: Map[AuthRBAC[F], List[AuthRoute[F]]])
   object Authorizations {
-    given combiner[F[_]]: Semigroup[Authorizations[F]] = Semigroup.instance { (authA, authB) => 
+    given combiner[F[_]]: Semigroup[Authorizations[F]] = Semigroup.instance { (authA, authB) =>
       Authorizations(authA.rbacRoutes |+| authB.rbacRoutes)
     }
   }

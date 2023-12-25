@@ -14,8 +14,8 @@ import org.typelevel.log4cats.slf4j.Slf4jLogger
 import org.scalatest.Inside
 import org.postgresql.util.PSQLException
 
-import com.corem.jobsboard.fixtures.*
 import com.corem.jobsboard.domain.user.*
+import com.corem.jobsboard.fixtures.UserFixture
 
 class UsersSpec
     extends AsyncFreeSpec

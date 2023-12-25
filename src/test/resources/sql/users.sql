@@ -19,7 +19,7 @@ INSERT INTO users (
     role
 ) VALUES (
     'cornet.remi@corem.corp',
-    '$2a$10$jY60jL/9Lv6./UHhhj2ZvOSm8PQIiTueC4gmsegrD5K.Yi6/mGY.m',
+    '$2a$10$0l3cq8mOClq3ppBzkVLr0OdssC0BOv0rJrwqcf0JxAeydvHeT1Xhi',
     'Remi',
     'Cornet',
     'Corem Corp',
@@ -35,7 +35,7 @@ INSERT INTO users (
     role
 ) VALUES (
     'gaston.elgato@corem.corp',
-    '$2a$10$jDPXCNCHkbZLzmiTRuw9A.gBHRDQ1iKnYONCBuskyOln8Aa8eucFa',
+    '$2a$10$3AN4sSQmbWXlkog6OIJjuesZ0cbi9uWd34j9Lx22Izv9faYD.H6qy',
     'Gaston',
     'El Gato',
     'Corem Corp',

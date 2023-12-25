@@ -18,29 +18,29 @@ trait UserFixture {
 
   val Remi = User(
     "cornet.remi@corem.corp",
-    "$2a$10$jY60jL/9Lv6./UHhhj2ZvOSm8PQIiTueC4gmsegrD5K.Yi6/mGY.m",
+    "$2a$10$0l3cq8mOClq3ppBzkVLr0OdssC0BOv0rJrwqcf0JxAeydvHeT1Xhi",
     Some("Remi"),
     Some("Cornet"),
     Some("Corem Corp"),
     Role.ADMIN
   )
   val remiEmail    = Remi.email
-  val remiPassword = "hashedpassword"
+  val remiPassword = "remimypassword"
 
   val Gaston = User(
     "gaston.elgato@corem.corp",
-    "$2a$10$jDPXCNCHkbZLzmiTRuw9A.gBHRDQ1iKnYONCBuskyOln8Aa8eucFa",
+    "$2a$10$3AN4sSQmbWXlkog6OIJjuesZ0cbi9uWd34j9Lx22Izv9faYD.H6qy",
     Some("Gaston"),
     Some("El Gato"),
     Some("Corem Corp"),
     Role.RECRUITER
   )
   val gastonEmail    = Gaston.email
-  val gastonPassword = "hashedpassword"
+  val gastonPassword = "gastonmypassword"
 
   val NewUser = User(
     "newuser@gmail.com",
-    "$2a$10$6LQt4xy4LzqQihZiRZGG0eeeDwDCvyvthICXzPKQDQA3C47LtrQFy",
+    "$2a$10$bZ8qBo60FGd0eSEMLzmpCuhSc3xIkh/wEorpEfOWqkkGT.svAB0.G",
     Some("John"),
     Some("Doe"),
     Some("Some company"),
@@ -49,10 +49,26 @@ trait UserFixture {
 
   val UpdatedGaston = User(
     "gaston.elgato@corem.corp",
-    "$2a$10$PUD6CznGVHntJFsOOeV4NezBgBUs6irV3sC9fa6ufc0xp9VLYyHZ.",
+    "$2a$10$P3TUBvKE5miIj/qrHDMqEeoxwIESTs7HCDhYjppbikDaNqp3HXdWu",
     Some("GASTON"),
     Some("EL GATO"),
     Some("Adobe"),
     Role.RECRUITER
+  )
+
+  val NewUserRemi = NewUserInfo(
+    remiEmail,
+    remiPassword,
+    Some("Remi"),
+    Some("Cornet"),
+    Some("Corem Corp")
+  )
+
+  val NewUserGaston = NewUserInfo(
+    gastonEmail,
+    gastonPassword,
+    Some("Gaston"),
+    Some("El Gato"),
+    Some("Corem Corp")
   )
 }

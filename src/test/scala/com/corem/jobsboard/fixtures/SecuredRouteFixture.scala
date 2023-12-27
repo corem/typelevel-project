@@ -13,6 +13,7 @@ import org.http4s.Credentials
 
 import com.corem.jobsboard.domain.user.*
 import com.corem.jobsboard.domain.security.*
+import tsec.authentication.SecuredRequestHandler
 
 trait SecuredRouteFixture extends UserFixture {
   val mockedAuthenticator: Authenticator[IO] = {
@@ -36,4 +37,6 @@ trait SecuredRouteFixture extends UserFixture {
         Authorization(Credentials.Token(AuthScheme.Bearer, jwtString))
       }
     }
+  
+  given securedHandler: SecuredHandler[IO] = SecuredRequestHandler(mockedAuthenticator)
 }

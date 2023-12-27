@@ -36,10 +36,12 @@ class AuthRoutesSpec
     with Http4sDsl[IO]
     with SecuredRouteFixture {
 
-  val mockedAuth: Auth[IO] = new Auth[IO] {
-    def login(email: String, password: String): IO[Option[JwtToken]] =
+  val mockedAuth: Auth[IO] = probedAuth(None)
+
+  def probedAuth(userMap: Option[Ref[IO, Map[String, String]]]): Auth[IO] = new Auth[IO] {
+    def login(email: String, password: String): IO[Option[User]] =
       if (email == remiEmail && password == remiPassword)
-        mockedAuthenticator.create(remiEmail).map(Some(_))
+        IO(Some(Remi))
       else IO.pure(None)
 
     def signUp(newUserInfo: NewUserInfo): IO[Option[User]] =
@@ -59,14 +61,38 @@ class AuthRoutesSpec
           IO.pure(Left("Invalid password"))
       else
         IO.pure(Right(None))
-      
+
     def delete(email: String): IO[Boolean] = IO.pure(true)
+
+    def sendPasswordRecoveryToken(email: String): IO[Unit] =
+      userMap
+        .traverse { userMapRef =>
+          userMapRef.modify { userMap =>
+            (userMap + (email -> "abc123"), ())
+          }
+        }
+        .map(_ => ())
+
+    def recoverPasswordFromToken(
+        email: String,
+        token: String,
+        newPassword: String
+    ): IO[Boolean] =
+      userMap
+        .traverse { userMapRef =>
+          userMapRef.get
+            .map { userMap =>
+              userMap.get(email).filter(_ == token)
+            }
+            .map(_.nonEmpty)
+        }
+        .map(_.getOrElse(false))
 
     def authenticator: Authenticator[IO] = mockedAuthenticator
   }
 
   given logger: Logger[IO]       = Slf4jLogger.getLogger[IO]
-  val authRoutes: HttpRoutes[IO] = AuthRoutes[IO](mockedAuth).routes
+  val authRoutes: HttpRoutes[IO] = AuthRoutes[IO](mockedAuth, mockedAuthenticator).routes
 
   "AuthRoutes" - {
     "should return a 401 - Unauthorized if login fails" in {
@@ -207,6 +233,52 @@ class AuthRoutesSpec
         )
       } yield {
         response.status shouldBe Status.Ok
+      }
+    }
+
+    "should return a 200 - Ok when resetting a password, and an email should be triggered" in {
+      for {
+        userMapRef <- Ref.of[IO, Map[String, String]](Map())
+        auth       <- IO(probedAuth(Some(userMapRef)))
+        routes     <- IO(AuthRoutes(auth, mockedAuthenticator).routes)
+        response <- routes.orNotFound.run(
+          Request(method = Method.POST, uri = uri"/auth/reset")
+            .withEntity(ForgotPasswordInfo(remiEmail))
+        )
+        userMap <- userMapRef.get
+      } yield {
+        response.status shouldBe Status.Ok
+        userMap should contain key (remiEmail)
+      }
+    }
+
+    "should return a 200 - Ok when recovering a password for a user/token combination" in {
+      for {
+        userMapRef <- Ref.of[IO, Map[String, String]](Map(remiEmail -> "abc123"))
+        auth       <- IO(probedAuth(Some(userMapRef)))
+        routes     <- IO(AuthRoutes(auth, mockedAuthenticator).routes)
+        response <- routes.orNotFound.run(
+          Request(method = Method.POST, uri = uri"/auth/recover")
+            .withEntity(RecoverPasswordInfo(remiEmail, "abc123", "newPassword"))
+        )
+        userMap <- userMapRef.get
+      } yield {
+        response.status shouldBe Status.Ok
+      }
+    }
+
+    "should return a 403 - Forbidden when recovering a password for a user with an incorrect token" in {
+      for {
+        userMapRef <- Ref.of[IO, Map[String, String]](Map(remiEmail -> "abc123"))
+        auth       <- IO(probedAuth(Some(userMapRef)))
+        routes     <- IO(AuthRoutes(auth, mockedAuthenticator).routes)
+        response <- routes.orNotFound.run(
+          Request(method = Method.POST, uri = uri"/auth/recover")
+            .withEntity(RecoverPasswordInfo(remiEmail, "wrongToken", "newPassword"))
+        )
+        userMap <- userMapRef.get
+      } yield {
+        response.status shouldBe Status.Forbidden
       }
     }
   }

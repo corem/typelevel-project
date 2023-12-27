@@ -20,17 +20,17 @@ import com.corem.jobsboard.domain.user.*
 import com.corem.jobsboard.domain.security.*
 import com.corem.jobsboard.http.responses.*
 
-class AuthRoutes[F[_]: Concurrent: Logger] private (auth: Auth[F]) extends HttpValidationDsl[F] {
-
-  private val authenticator = auth.authenticator
-  private val securedHandler: SecuredRequestHandler[F, String, User, JwtToken] =
-    SecuredRequestHandler(authenticator)
+class AuthRoutes[F[_]: Concurrent: Logger: SecuredHandler] private (
+    auth: Auth[F],
+    authenticator: Authenticator[F]
+) extends HttpValidationDsl[F] {
 
   private val loginRoute: HttpRoutes[F] = HttpRoutes.of[F] { case req @ POST -> Root / "login" =>
     req.validate[LoginInfo] { loginInfo =>
       val maybeJwtToken = for {
-        maybeToken <- auth.login(loginInfo.email, loginInfo.password)
+        mayberUser <- auth.login(loginInfo.email, loginInfo.password)
         _          <- Logger[F].info(s"User logging in: ${loginInfo.email}")
+        maybeToken <- mayberUser.traverse(user => authenticator.create(user.email))
       } yield maybeToken
 
       maybeJwtToken.map {
@@ -67,6 +67,30 @@ class AuthRoutes[F[_]: Concurrent: Logger] private (auth: Auth[F]) extends HttpV
       }
   }
 
+  private val forgotPasswordRoute: HttpRoutes[F] = HttpRoutes.of[F] {
+    case req @ POST -> Root / "reset" =>
+      for {
+        fpInfo <- req.as[ForgotPasswordInfo]
+        _      <- auth.sendPasswordRecoveryToken(fpInfo.email)
+        resp   <- Ok()
+      } yield resp
+  }
+
+  private val recoverPasswordRoute: HttpRoutes[F] = HttpRoutes.of[F] {
+    case req @ POST -> Root / "recover" =>
+      for {
+        rpInfo <- req.as[RecoverPasswordInfo]
+        recoverySuccessful <- auth.recoverPasswordFromToken(
+          rpInfo.email,
+          rpInfo.token,
+          rpInfo.newPassword
+        )
+        resp <-
+          if (recoverySuccessful) Ok()
+          else Forbidden(FailureResponse("Email/Token combination is incorrect"))
+      } yield resp
+  }
+
   private val logoutRoute: AuthRoute[F] = { case req @ POST -> Root / "logout" asAuthed _ =>
     val token = req.authenticator
     for {
@@ -78,13 +102,14 @@ class AuthRoutes[F[_]: Concurrent: Logger] private (auth: Auth[F]) extends HttpV
   private val deleteUserRoute: AuthRoute[F] = {
     case req @ DELETE -> Root / "users" / email asAuthed user =>
       auth.delete(email).flatMap {
-        case true => Ok()
+        case true  => Ok()
         case false => NotFound()
       }
   }
 
-  val unauthedRoutes = (loginRoute <+> createUserRoute)
-  val authedRoutes = securedHandler.liftService(
+  val unauthedRoutes =
+    (loginRoute <+> createUserRoute <+> forgotPasswordRoute <+> recoverPasswordRoute)
+  val authedRoutes = SecuredHandler[F].liftService(
     changePasswordRoute.restrictedTo(allRoles) |+|
       logoutRoute.restrictedTo(allRoles) |+|
       deleteUserRoute.restrictedTo(adminOnly)
@@ -96,6 +121,9 @@ class AuthRoutes[F[_]: Concurrent: Logger] private (auth: Auth[F]) extends HttpV
 }
 
 object AuthRoutes {
-  def apply[F[_]: Concurrent: Logger](auth: Auth[F]) =
-    new AuthRoutes[F](auth)
+  def apply[F[_]: Concurrent: Logger: SecuredHandler](
+      auth: Auth[F],
+      authenticator: Authenticator[F]
+  ) =
+    new AuthRoutes[F](auth, authenticator)
 }

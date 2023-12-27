@@ -57,7 +57,7 @@ class JobRoutesSpec
   }
 
   given logger: Logger[IO]      = Slf4jLogger.getLogger[IO]
-  val jobRoutes: HttpRoutes[IO] = JobRoutes[IO](jobs, mockedAuthenticator).routes
+  val jobRoutes: HttpRoutes[IO] = JobRoutes[IO](jobs).routes
 
   "JobRoutes" - {
     "should return a job with a given id" in {

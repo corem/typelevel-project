@@ -6,7 +6,6 @@ import com.corem.jobsboard.core.Users
 import com.corem.jobsboard.domain.user.*
 
 trait UserFixture {
-
   val mockedUsers: Users[IO] = new Users[IO] {
     override def find(email: String): IO[Option[User]] =
       if (email == remiEmail) IO.pure(Some(Remi))

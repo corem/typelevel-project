@@ -27,11 +27,8 @@ import com.corem.jobsboard.logging.syntax.*
 import com.corem.jobsboard.http.validation.syntax.*
 import com.corem.jobsboard.domain.user.*
 
-class JobRoutes[F[_]: Concurrent: Logger] private (jobs: Jobs[F], authenticator: Authenticator[F])
+class JobRoutes[F[_]: Concurrent: Logger: SecuredHandler] private (jobs: Jobs[F])
     extends HttpValidationDsl[F] {
-
-  private val securedHandler: SecuredHandler[F] =
-    SecuredRequestHandler(authenticator)
 
   object SkipQueryParem  extends OptionalQueryParamDecoderMatcher[Int]("skip")
   object LimitQueryParem extends OptionalQueryParamDecoderMatcher[Int]("limit")
@@ -93,7 +90,7 @@ class JobRoutes[F[_]: Concurrent: Logger] private (jobs: Jobs[F], authenticator:
   }
 
   val unauthedRoutes = (allJobsRoute <+> findJobRoute)
-  val authedRoutes = securedHandler.liftService(
+  val authedRoutes = SecuredHandler[F].liftService(
     createJobRoute.restrictedTo(allRoles) |+|
       updateJobRoute.restrictedTo(allRoles) |+|
       deleteJobRoute.restrictedTo(allRoles)
@@ -105,6 +102,6 @@ class JobRoutes[F[_]: Concurrent: Logger] private (jobs: Jobs[F], authenticator:
 }
 
 object JobRoutes {
-  def apply[F[_]: Concurrent: Logger](jobs: Jobs[F], authenticator: Authenticator[F]) =
-    new JobRoutes[F](jobs, authenticator)
+  def apply[F[_]: Concurrent: Logger: SecuredHandler](jobs: Jobs[F]) =
+    new JobRoutes[F](jobs)
 }

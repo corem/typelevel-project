@@ -17,8 +17,8 @@ object EmailsPlayground {
   def main(args: Array[String]): Unit = {
     val host        = "smtp.ethereal.email"
     val port        = 587
-    val user        = "jordyn.jast@ethereal.email"
-    val password    = "FP2hNPdSSY3r9t4KAy"
+    val user        = "ferne41@ethereal.email"
+    val password    = "gmBwkT52fwusuC28RU"
     val token       = "ABCD1234"
     val frontendUrl = "http://google.com"
 

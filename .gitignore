@@ -165,3 +165,8 @@ project/project/metals.sbt
 project/project/.bloop/bloop.settings.json
 project/project/.bloop/typelevel-fullstack-build-build.json
 project/project/project/metals.sbt
+
+app/.parcel-cache
+app/dist
+app/node_modules
+package-lock.json

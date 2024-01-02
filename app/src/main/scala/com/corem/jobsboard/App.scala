@@ -16,6 +16,8 @@ import com.corem.jobsboard.pages.Page
 
 object App {
   trait Msg
+  case object NoOp extends Msg
+  
   case class Model(router: Router, session: Session, page: Page)
 }
 

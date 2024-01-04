@@ -27,20 +27,21 @@ final case class ForgotPasswordPage(email: String = "", status: Option[Page.Stat
         (setErrorStatus("Please insert a valid email"), Cmd.None)
       else
         (this, Commands.resetPassword(email))
-    case ResetSuccess => (setSuccessStatus("Check your email"), Cmd.None)
+    case ResetSuccess        => (setSuccessStatus("Check your email"), Cmd.None)
     case ResetFailure(error) => (setErrorStatus(error), Cmd.None)
-    case _            => (this, Cmd.None)
+    case _                   => (this, Cmd.None)
   }
 
   override protected def renderFormContent(): List[Html[App.Msg]] = List(
     renderInput("Email", "email", "text", true, UpdateEmail(_)),
-    button(`type` := "button", onClick(AttemptResetPassword))("Send Email")
+    button(`type` := "button", onClick(AttemptResetPassword))("Send Email"),
+    renderAuxLink(Page.Urls.RESET_PASSWORD, "Have a token ?")
   )
 
-  def setErrorStatus(message: String) =
+  private def setErrorStatus(message: String) =
     this.copy(status = Some(Page.Status(message, Page.StatusKind.ERROR)))
 
-  def setSuccessStatus(message: String) =
+  private def setSuccessStatus(message: String) =
     this.copy(status = Some(Page.Status(message, Page.StatusKind.SUCCESS)))
 }
 

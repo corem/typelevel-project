@@ -69,10 +69,10 @@ final case class SignupPage(
     button(`type` := "button", onClick(AttempSignUp))("Sign Up")
   )
 
-  def setErrorStatus(message: String) =
+  private def setErrorStatus(message: String) =
     this.copy(status = Some(Page.Status(message, Page.StatusKind.ERROR)))
 
-  def setSuccessStatus(message: String) =
+  private def setSuccessStatus(message: String) =
     this.copy(status = Some(Page.Status(message, Page.StatusKind.SUCCESS)))
 }
 
@@ -106,6 +106,7 @@ object SignupPage {
               case Left(e)  => SignupError(s"Error: ${e.getMessage}")
               case Right(e) => SignupError(e)
             }
+          case _ => SignupError("Unkown reply from server.")
         }
       val onError: HttpError => Msg =
         e => SignupError(e.toString)

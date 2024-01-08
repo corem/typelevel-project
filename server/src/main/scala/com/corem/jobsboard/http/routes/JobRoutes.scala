@@ -33,6 +33,10 @@ class JobRoutes[F[_]: Concurrent: Logger: SecuredHandler] private (jobs: Jobs[F]
   object SkipQueryParem  extends OptionalQueryParamDecoderMatcher[Int]("skip")
   object LimitQueryParem extends OptionalQueryParamDecoderMatcher[Int]("limit")
 
+  private val allFiltersRoute: HttpRoutes[F] = HttpRoutes.of[F] { case GET -> Root / "filters" =>
+    jobs.possibleFilters().flatMap(jf => Ok(jf))
+  }
+
   private val allJobsRoute: HttpRoutes[F] = HttpRoutes.of[F] {
     case req @ POST -> Root :? LimitQueryParem(limit) +& SkipQueryParem(skip) =>
       for {
@@ -60,10 +64,10 @@ class JobRoutes[F[_]: Concurrent: Logger: SecuredHandler] private (jobs: Jobs[F]
     ).pure[F]
   }
 
-  private val createJobRoute: AuthRoute[F] = { case req @ POST -> Root / "create" asAuthed _ =>
+  private val createJobRoute: AuthRoute[F] = { case req @ POST -> Root / "create" asAuthed user =>
     req.request.validate[JobInfo] { jobInfo =>
       for {
-        jobId <- jobs.create("cornet.remi@corem.corp", jobInfo)
+        jobId <- jobs.create(user.email, jobInfo)
         resp  <- Created(jobId)
       } yield resp
     }
@@ -89,7 +93,7 @@ class JobRoutes[F[_]: Concurrent: Logger: SecuredHandler] private (jobs: Jobs[F]
       }
   }
 
-  val unauthedRoutes = (allJobsRoute <+> findJobRoute)
+  val unauthedRoutes = (allFiltersRoute <+> allJobsRoute <+> findJobRoute)
   val authedRoutes = SecuredHandler[F].liftService(
     createJobRoute.restrictedTo(allRoles) |+|
       updateJobRoute.restrictedTo(allRoles) |+|

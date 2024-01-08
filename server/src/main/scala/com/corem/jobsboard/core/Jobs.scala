@@ -15,6 +15,7 @@ import java.util.UUID
 import com.corem.jobsboard.logging.syntax.*
 import com.corem.jobsboard.domain.job.*
 import com.corem.jobsboard.domain.pagination.*
+import cats.effect.kernel.Async
 
 trait Jobs[F[_]] {
   def create(ownerEmail: String, jobInfo: JobInfo): F[UUID]
@@ -23,6 +24,7 @@ trait Jobs[F[_]] {
   def find(id: UUID): F[Option[Job]]
   def update(id: UUID, jobInfo: JobInfo): F[Option[Job]]
   def delete(id: UUID): F[Int]
+  def possibleFilters(): F[JobFilter]
 }
 
 class LiveJobs[F[_]: MonadCancelThrow: Logger] private (xa: Transactor[F]) extends Jobs[F] {
@@ -130,7 +132,7 @@ class LiveJobs[F[_]: MonadCancelThrow: Logger] private (xa: Transactor[F]) exten
       filter.seniorities.toNel.map(seniorities => Fragments.in(fr"seniority", seniorities)),
       filter.tags.toNel.map(tags => Fragments.or(tags.toList.map(tag => fr"$tag=any(tags)"): _*)),
       filter.maxSalary.map(salary => fr"salaryHi > $salary"),
-      filter.remote.some.map(remote => fr"remote = $remote")
+      filter.remote.some.filter(identity).map(remote => fr"remote = $remote")
     )
 
     val paginationFragment: Fragment =
@@ -203,9 +205,39 @@ class LiveJobs[F[_]: MonadCancelThrow: Logger] private (xa: Transactor[F]) exten
         WHERE id = ${id}
     """.update.run
       .transact(xa)
+
+  override def possibleFilters(): F[JobFilter] =
+    sql"""
+    SELECT
+      ARRAY(SELECT DISTINCT (company) FROM jobs) AS companies,
+      ARRAY(SELECT DISTINCT (location) FROM jobs) AS locations,
+      ARRAY(SELECT DISTINCT (country) FROM jobs WHERE country IS NOT NULL) AS countries,
+      ARRAY(SELECT DISTINCT (seniority) FROM jobs WHERE seniority IS NOT NULL) AS seniorities,
+      ARRAY(SELECT DISTINCT (UNNEST(tags)) FROM jobs) AS tags,
+      MAX(salaryHi),
+      false FROM jobs
+    """
+      .query[JobFilter]
+      .option
+      .transact(xa)
+      .map(_.getOrElse(JobFilter()))
 }
 
 object LiveJobs {
+  given jobFilterRead: Read[JobFilter] = Read[
+    (
+        List[String],
+        List[String],
+        List[String],
+        List[String],
+        List[String],
+        Option[Int],
+        Boolean
+    )
+  ].map { case (companies, locations, countries, seniorities, tags, maxSalary, remote) =>
+    JobFilter(companies, locations, countries, seniorities, tags, maxSalary, remote)
+  }
+
   given jobRead: Read[Job] = Read[
     (
         UUID,

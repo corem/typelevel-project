@@ -4,6 +4,7 @@ import cats.effect.IO
 
 import io.circe.Encoder
 import io.circe.syntax.*
+import io.circe.parser.*
 
 import tyrian.*
 import tyrian.http.*
@@ -52,4 +53,23 @@ trait Endpoint[M] {
       ),
       Decoder[M](onResponse, onError)
     )
+}
+
+object Endpoint {
+  def onResponse[A: io.circe.Decoder, Msg](
+      valueCb: A => Msg,
+      errorCb: String => Msg
+  ): Response => Msg =
+    response =>
+      response.status match {
+        case Status(s, _) if s >= 200 && s < 300 =>
+          val json   = response.body
+          val parsed = parse(json).flatMap(_.as[A])
+          parsed match {
+            case Left(parsingError) => errorCb(s"Parsing error: $parsingError")
+            case Right(value)       => valueCb(value)
+          }
+        case Status(code, message) if code >= 400 && code < 600 =>
+          errorCb(s"Error: $message")
+      }
 }

@@ -4,6 +4,7 @@ import tyrian.*
 import cats.effect.*
 
 import com.corem.jobsboard.*
+import com.corem.jobsboard.components.*
 
 object Page {
   trait Msg
@@ -22,6 +23,7 @@ object Page {
     val FORGOT_PASSWORD = "/forgotpassword"
     val RESET_PASSWORD  = "/resetpassword"
     val PROFILE         = "/profile"
+    val POST_JOB        = "/postjob"
     val JOBS            = "/jobs"
     val HASH            = "#"
   }
@@ -33,18 +35,11 @@ object Page {
     case `FORGOT_PASSWORD`         => ForgotPasswordPage()
     case `RESET_PASSWORD`          => ResetPasswordPage()
     case `PROFILE`                 => ProfilePage()
+    case `POST_JOB`                => PostJobPage()
     case `EMPTY` | `HOME` | `JOBS` => JobsListPage()
     case s"/jobs/$id"              => JobPage(id)
     case _                         => NotFoundPage()
   }
 }
 
-abstract class Page {
-  import App.Msg
-
-  def initCmd: Cmd[IO, Msg]
-
-  def update(msg: Msg): (Page, Cmd[IO, Msg])
-
-  def view(): Html[Msg]
-}
+abstract class Page extends Component[App.Msg,Page]

@@ -50,10 +50,10 @@ final case class LoginPage(
     renderAuxLink(Page.Urls.FORGOT_PASSWORD, "Forgot password ?")
   )
 
-  def setErrorStatus(message: String) =
+  private def setErrorStatus(message: String) =
     this.copy(status = Some(Page.Status(message, Page.StatusKind.ERROR)))
 
-  def setSuccessStatus(message: String) =
+  private def setSuccessStatus(message: String) =
     this.copy(status = Some(Page.Status(message, Page.StatusKind.SUCCESS)))
 
 }

@@ -12,6 +12,7 @@ import tyrian.http.Response
 
 import com.corem.jobsboard.*
 import com.corem.jobsboard.App.Msg
+import com.corem.jobsboard.components.*
 import com.corem.jobsboard.common.Constants
 import com.corem.jobsboard.common.Endpoint
 
@@ -35,7 +36,7 @@ final case class ForgotPasswordPage(email: String = "", status: Option[Page.Stat
   override protected def renderFormContent(): List[Html[App.Msg]] = List(
     renderInput("Email", "email", "text", true, UpdateEmail(_)),
     button(`type` := "button", onClick(AttemptResetPassword))("Send Email"),
-    renderAuxLink(Page.Urls.RESET_PASSWORD, "Have a token ?")
+    Anchors.renderSimpleNavLink("Have a token ?", Page.Urls.RESET_PASSWORD, "auth-link")
   )
 
   private def setErrorStatus(message: String) =

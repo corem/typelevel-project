@@ -8,27 +8,47 @@ import scala.scalajs.js.annotation.*
 import com.corem.jobsboard.*
 import com.corem.jobsboard.core.*
 import com.corem.jobsboard.pages.*
+import com.corem.jobsboard.components.*
+import com.corem.jobsboard.common.Constants
 
 object Header {
 
   def view() = {
-    div(`class` := "header-container")(
-      renderLogo(),
-      div(`class` := "header-nav")(
-        ul(`class` := "header-links")(
-          renderNavLinks()
+    div(`class` := "container-fluid p-0")(
+      div(`class` := "jvm-nav")(
+        div(`class` := "container")(
+          nav(`class` := "navbar navbar-expand-lg navbar-light JVM-nav")(
+            div(`class` := "container")(
+              renderLogo(),
+              button(
+                `class` := "navbar-toggler",
+                `type`  := "button",
+                attribute("data-bs-toggle", "collapse"),
+                attribute("data-bs-target", "#navbarNav"),
+                attribute("aria-controls", "navbarNav"),
+                attribute("aria-expanded", "false"),
+                attribute("aria-label", "Toggle navigation")
+              )(
+                span(`class` := "navbar-toggler-icon")()
+              ),
+              div(`class` := "collapse navbar-collapse", id := "navbarNav")(
+                ul(
+                  `class` := "navbar-nav ms-auto menu align-center expanded text-center SMN_effect-3"
+                )(
+                  renderNavLinks()
+                )
+              )
+            )
+          )
         )
       )
     )
   }
 
-  @js.native
-  @JSImport("/static/img/logocorgi.jpg", JSImport.Default)
-  private val logoImage: String = js.native
-
   private def renderLogo() = {
     a(
-      href := Page.Urls.HOME,
+      href    := Page.Urls.HOME,
+      `class` := "navbar-brand",
       onEvent(
         "click",
         e => {
@@ -39,7 +59,7 @@ object Header {
     )(
       img(
         `class` := "home-logo",
-        src     := logoImage,
+        src     := Constants.logoImage,
         alt     := "Corem Logo"
       )
     )
@@ -72,17 +92,7 @@ object Header {
 
   private def renderNavLink(text: String, location: String)(locationToMsg: String => App.Msg) =
     li(`class` := "nav-item")(
-      a(
-        href    := location,
-        `class` := "nav-link",
-        onEvent(
-          "click",
-          e => {
-            e.preventDefault()
-            locationToMsg(location)
-          }
-        )
-      )(text)
+      Anchors.renderNavLink(text, location, "nav-link jvm-item Home active-item")(locationToMsg)
     )
 
 }

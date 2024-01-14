@@ -19,6 +19,7 @@ import com.corem.jobsboard.domain.auth.*
 import com.corem.jobsboard.common.Endpoint
 import com.corem.jobsboard.*
 import com.corem.jobsboard.core.*
+import com.corem.jobsboard.components.*
 
 final case class LoginPage(
     email: String = "",
@@ -47,7 +48,7 @@ final case class LoginPage(
     renderInput("Email", "email", "text", true, UpdateEmail(_)),
     renderInput("Password", "password", "password", true, UpdatePassword(_)),
     button(`type` := "button", onClick(AttemptLogin))("Log In"),
-    renderAuxLink(Page.Urls.FORGOT_PASSWORD, "Forgot password ?")
+    Anchors.renderSimpleNavLink("Forgot password ?", Page.Urls.FORGOT_PASSWORD, "auth-link")
   )
 
   private def setErrorStatus(message: String) =

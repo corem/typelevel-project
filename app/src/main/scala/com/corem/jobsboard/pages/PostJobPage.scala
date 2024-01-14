@@ -59,7 +59,7 @@ case class PostJobPage(
     case UpdateImageFile(maybeFile) =>
       (this, Commands.loadFile(maybeFile))
     case UpdateImage(maybeImage) =>
-      (this.copy(image = maybeImage), Logger.consoleLog[IO]("I have the image " + maybeImage))
+      (this.copy(image = maybeImage), Cmd.None)
     case UpdateTags(v)      => (this.copy(tags = Some(v)), Cmd.None)
     case UpdateSeniority(v) => (this.copy(seniority = Some(v)), Cmd.None)
     case UpdateOther(v)     => (this.copy(other = Some(v)), Cmd.None)
@@ -94,7 +94,7 @@ case class PostJobPage(
     renderInput("Title", "title", "text", true, UpdateTitle(_)),
     renderTextArea("Description", "description", true, UpdateDescription(_)),
     renderInput("ExternalUrl", "externalurl", "text", true, UpdateExternalUrl(_)),
-    renderInput("Remote", "remote", "checkbox", true, _ => ToggleRemote),
+    renderToggle("Remote", "remote", true, _ => ToggleRemote),
     renderInput("Location", "location", "text", true, UpdateLocation(_)),
     renderInput(
       "salaryLo",

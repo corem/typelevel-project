@@ -17,7 +17,7 @@ import com.corem.jobsboard.pages.Page
 object App {
   trait Msg
   case object NoOp extends Msg
-  
+
   case class Model(router: Router, session: Session, page: Page)
 }
 
@@ -62,6 +62,10 @@ class App extends TyrianApp[App.Msg, App.Model] {
   override def view(model: Model): Html[Msg] =
     div(
       Header.view(),
-      model.page.view()
+      main(
+        div(`class` := "container-fluid")(
+          model.page.view()
+        )
+      )
     )
 }

@@ -18,6 +18,7 @@ import com.corem.jobsboard.App.Msg
 import com.corem.jobsboard.common.Constants
 import com.corem.jobsboard.common.Endpoint
 import com.corem.jobsboard.domain.auth.RecoverPasswordInfo
+import com.corem.jobsboard.components.*
 
 final case class ResetPasswordPage(
     email: String = "",
@@ -56,7 +57,7 @@ final case class ResetPasswordPage(
     renderInput("Token", "token", "text", true, UpdateToken(_)),
     renderInput("Password", "password", "password", true, UpdatePassword(_)),
     button(`type` := "button", onClick(AttemptResetPassword))("Set Password"),
-    renderAuxLink(Page.Urls.FORGOT_PASSWORD, "Don't have a token yet ?")
+    Anchors.renderSimpleNavLink("Don't have a token yet ?", Page.Urls.FORGOT_PASSWORD, "auth-link")
   )
 
   private def setErrorStatus(message: String) =

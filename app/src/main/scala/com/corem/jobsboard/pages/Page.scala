@@ -14,6 +14,9 @@ object Page {
   }
 
   case class Status(message: String, kind: StatusKind)
+  object Status {
+    val LOADING = Status("Loading", StatusKind.LOADING)
+  }
 
   object Urls {
     val EMPTY           = ""
@@ -26,6 +29,7 @@ object Page {
     val POST_JOB        = "/postjob"
     val JOBS            = "/jobs"
     val HASH            = "#"
+    def JOB(id: String) = s"/jobs/$id"
   }
 
   import Urls.*

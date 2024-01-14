@@ -1,6 +1,13 @@
 package com.corem.jobsboard.common
 
+import scala.scalajs.js
+import scala.scalajs.js.annotation.*
+
 object Constants {
+  @js.native
+  @JSImport("/static/img/logoproject3.png", JSImport.Default)
+  val logoImage: String = js.native
+
   val emailRegex =
     """^[a-zA-Z0-9\.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"""
 

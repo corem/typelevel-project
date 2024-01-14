@@ -28,7 +28,7 @@ final case class JobsListPage(
     jobFilter: JobFilter = JobFilter(),
     jobs: List[Job] = List(),
     canLoadMore: Boolean = true,
-    status: Option[Page.Status] = Some(Page.Status("Loading", Page.StatusKind.LOADING))
+    status: Option[Page.Status] = Some(Page.Status.LOADING)
 ) extends Page {
   import JobListPage.*
 
@@ -53,28 +53,25 @@ final case class JobsListPage(
   }
 
   override def view(): Html[App.Msg] =
-    div(`class` := "job-list-page")(
-      filterPanel.view(),
-      div(`class` := "jobs-container")(
-        jobs.map(renderJob) ++ maybeRenderLoadMore
+    section(`class` := "section-1")(
+      div(`class` := "container")(
+        div(`class` := "row jvm-recent-jobs-body")(
+          div(`class` := "col-lg-4")(
+            filterPanel.view()
+          ),
+          div(`class` := "col-lg-8")(
+            jobs.map(renderJob) ++ maybeRenderLoadMore
+          )
+        )
       )
     )
 
   private def renderJob(job: Job) =
-    div(`class` := "job-card")(
-      div(`class` := "job-card-img")(
-        img(
-          `class` := "job-logo",
-          src     := job.jobInfo.image.getOrElse(""),
-          alt     := job.jobInfo.title
-        )
-      ),
-      div(`class` := "job-card-content")(
-        h4(s"${job.jobInfo.company} - ${job.jobInfo.title}")
-      ),
-      div(`class` := "job-card-apply")(
-        a(href := job.jobInfo.externalUrl, target := "blank")("Apply")
-      )
+    JobComponents.card(job)
+
+  private def renderJobSummary(job: Job): Html[App.Msg] =
+    div(
+      JobComponents.renderDetail("location-dot", job.jobInfo.location)
     )
 
   private def maybeRenderLoadMore: Option[Html[App.Msg]] = status.map { s =>
@@ -84,7 +81,9 @@ final case class JobsListPage(
         case Page.Status(e, Page.StatusKind.ERROR)   => div(e)
         case Page.Status(_, Page.StatusKind.SUCCESS) =>
           if (canLoadMore)
-            button(`type` := "button", onClick(LoadMoreJobs))("Load more")
+            button(`type` := "button", `class` := "load-more-btn", onClick(LoadMoreJobs))(
+              "Load more"
+            )
           else
             div("All jobs loaded")
       }
@@ -98,7 +97,7 @@ final case class JobsListPage(
       countries = selectedFilters.get("Countries").getOrElse(Set()).toList,
       seniorities = selectedFilters.get("Seniorities").getOrElse(Set()).toList,
       tags = selectedFilters.get("Tags").getOrElse(Set()).toList,
-      maxSalary = Some(filterPanel.maxSalary),
+      maxSalary = Some(filterPanel.maxSalary).filter(_ > 0),
       filterPanel.remote
     )
 

@@ -8,6 +8,7 @@
 .idea/codeStyles/codeStyleConfig.xml
 .idea/misc.xml
 .idea/modules.xml
+.idea/modules/*
 .idea/codeStyles/Project.xml
 .bsp/sbt.json
 .idea/sbt.xml
@@ -170,3 +171,4 @@ app/.parcel-cache
 app/dist
 app/node_modules
 package-lock.json
+

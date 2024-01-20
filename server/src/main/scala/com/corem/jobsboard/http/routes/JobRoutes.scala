@@ -27,7 +27,7 @@ import com.corem.jobsboard.logging.syntax.*
 import com.corem.jobsboard.http.validation.syntax.*
 import com.corem.jobsboard.domain.user.*
 
-class JobRoutes[F[_]: Concurrent: Logger: SecuredHandler] private (jobs: Jobs[F])
+class JobRoutes[F[_]: Concurrent: Logger: SecuredHandler] private (jobs: Jobs[F], stripe: Stripe[F])
     extends HttpValidationDsl[F] {
 
   object SkipQueryParem  extends OptionalQueryParamDecoderMatcher[Int]("skip")
@@ -93,7 +93,18 @@ class JobRoutes[F[_]: Concurrent: Logger: SecuredHandler] private (jobs: Jobs[F]
       }
   }
 
-  val unauthedRoutes = (allFiltersRoute <+> allJobsRoute <+> findJobRoute)
+  private val promotedJobRoute: HttpRoutes[F] = HttpRoutes.of[F] {
+    case req @ POST -> Root / "promoted" =>
+      req.validate[JobInfo] { jobInfo =>
+        for {
+          jobId   <- jobs.create("TODO@corem.com", jobInfo)
+          session <- stripe.createCheckoutSession(jobId.toString, "TODO@corem.com")
+          resp    <- session.map(se => Ok(se.getUrl())).getOrElse(NotFound())
+        } yield resp
+      }
+  }
+
+  val unauthedRoutes = (promotedJobRoute <+> allFiltersRoute <+> allJobsRoute <+> findJobRoute)
   val authedRoutes = SecuredHandler[F].liftService(
     createJobRoute.restrictedTo(allRoles) |+|
       updateJobRoute.restrictedTo(allRoles) |+|
@@ -106,6 +117,6 @@ class JobRoutes[F[_]: Concurrent: Logger: SecuredHandler] private (jobs: Jobs[F]
 }
 
 object JobRoutes {
-  def apply[F[_]: Concurrent: Logger: SecuredHandler](jobs: Jobs[F]) =
-    new JobRoutes[F](jobs)
+  def apply[F[_]: Concurrent: Logger: SecuredHandler](jobs: Jobs[F], stripe: Stripe[F]) =
+    new JobRoutes[F](jobs, stripe)
 }

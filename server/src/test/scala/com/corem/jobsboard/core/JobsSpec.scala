@@ -59,11 +59,24 @@ class JobsSpec
       }
     }
 
-    "should create a new job" in {
+    "should create a new job initially inactive" in {
       transactor.use { xa =>
         val program = for {
           jobs     <- LiveJobs[IO](xa)
-          jobId    <- jobs.create("daniel@rockthejvm.com", RockTheJvmNewJob)
+          jobId    <- jobs.create("core@corem.com", RockTheJvmNewJob)
+          maybeJob <- jobs.find(jobId)
+        } yield maybeJob
+
+        program.asserting(_.map(_.jobInfo) shouldBe None)
+      }
+    }
+
+    "should activate a new job" in {
+      transactor.use { xa =>
+        val program = for {
+          jobs     <- LiveJobs[IO](xa)
+          jobId    <- jobs.create("core@corem.com", RockTheJvmNewJob)
+          _        <- jobs.activate(jobId)
           maybeJob <- jobs.find(jobId)
         } yield maybeJob
 
@@ -151,7 +164,7 @@ class JobsSpec
             locations shouldBe List("Berlin")
             countries shouldBe List("Germany")
             seniorities shouldBe List("Senior")
-            tags shouldBe List("cats", "scala", "scala-3")
+            tags shouldBe List("scala", "cats", "scala-3")
             maxSalary shouldBe Some(3000)
         }
       }

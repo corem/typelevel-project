@@ -6,6 +6,7 @@ import tyrian.Html.*
 import com.corem.jobsboard.*
 import com.corem.jobsboard.domain.job.*
 import com.corem.jobsboard.pages.*
+import com.corem.jobsboard.common.Constants
 
 object JobComponents {
 
@@ -14,7 +15,7 @@ object JobComponents {
       div(`class` := "jvm-recent-jobs-card-img")(
         img(
           `class` := "img-fluid",
-          src     := job.jobInfo.image.getOrElse(""),
+          src     := job.jobInfo.image.getOrElse(Constants.jobImagePlaceholder),
           alt     := job.jobInfo.title
         )
       ),

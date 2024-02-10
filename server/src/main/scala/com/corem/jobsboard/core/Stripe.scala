@@ -4,14 +4,14 @@ import cats.*
 import cats.implicits.*
 import org.typelevel.log4cats.Logger
 
-import scala.util.Try
-import scala.jdk.OptionConverters.*
-
 import com.stripe.{Stripe => TheStripe}
 import com.stripe.net.Webhook
 import com.stripe.model.*
 import com.stripe.model.checkout.Session
 import com.stripe.param.checkout.SessionCreateParams
+
+import scala.util.Try
+import scala.jdk.OptionConverters.*
 
 import com.corem.jobsboard.logging.syntax.*
 import com.corem.jobsboard.config.*

@@ -14,7 +14,6 @@ import org.typelevel.log4cats.Logger
 import tsec.authentication.asAuthed
 import tsec.authentication.SecuredRequestHandler
 import scala.language.implicitConversions
-import org.typelevel.ci.CIString
 import org.typelevel.ci.CIStringSyntax
 
 import java.util.UUID
@@ -53,17 +52,6 @@ class JobRoutes[F[_]: Concurrent: Logger: SecuredHandler] private (jobs: Jobs[F]
       case Some(job) => Ok(job)
       case None      => NotFound(FailureResponse(s"Job $id not found"))
     }
-
-  }
-
-  private def createJob(jobInfo: JobInfo): F[Job] = {
-    Job(
-      id = UUID.randomUUID(),
-      date = System.currentTimeMillis(),
-      ownerEmail = "Todo",
-      jobInfo = jobInfo,
-      active = true
-    ).pure[F]
   }
 
   private val createJobRoute: AuthRoute[F] = { case req @ POST -> Root / "create" asAuthed user =>

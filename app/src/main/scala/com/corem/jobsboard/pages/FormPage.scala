@@ -140,7 +140,7 @@ abstract class FormPage(title: String, status: Option[Page.Status]) extends Page
   private def maybeRenderErrors() =
     status
       .filter(s => s.kind == Page.StatusKind.ERROR && s.message.nonEmpty)
-      .map(s => div(`class` := "form-errors")(s.message))
+      .map(s => div(`class` := "page-status-errors")(s.message))
       .getOrElse(div())
 
   private def clearForm() =

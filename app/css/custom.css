@@ -1,3 +1,22 @@
+.app {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.footer {
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0 10px 0;
+    margin-top: auto;
+}
+
+.section-1 {
+    margin-bottom: 10px;
+}
+
 .nav-link {
     color: red;
 }
@@ -28,6 +47,23 @@
 
 .aux-link {
     display: block;
+}
+
+.job-list-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 200px;
+    background-size: 300%;
+    background-image:
+        linear-gradient(-45deg, rgb(43, 158, 204) 0%, rgb(51, 49, 151) 25%, rgb(98, 33, 117) 50%, rgb(124, 50, 50) 100%);
+    animation: animateBG 20s;
+    max-width: 100%;
+}
+
+.job-list-title {
+    color: white;
+    margin: auto;
 }
 
 .jobs-container {
@@ -183,7 +219,7 @@ textarea.form-control {
     font-weight: 500;
 }
 
-.form-errors {
+.page-status-errors {
     border: 1px solid red;
     padding: 10px;
     border-radius: 5px;
@@ -193,6 +229,12 @@ textarea.form-control {
     display: flex;
     flex-direction: column;
     align-items: center;
+}
+
+.form-text {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
 }
 
 @keyframes animateBG {

@@ -20,7 +20,7 @@ import java.{util => ju}
 
 trait Jobs[F[_]] {
   def create(ownerEmail: String, jobInfo: JobInfo): F[UUID]
-  def all(): F[List[Job]]
+  def all(): fs2.Stream[F, Job]
   def all(filter: JobFilter, pagination: Pagination): F[List[Job]]
   def find(id: UUID): F[Option[Job]]
   def update(id: UUID, jobInfo: JobInfo): F[Option[Job]]
@@ -73,7 +73,7 @@ class LiveJobs[F[_]: MonadCancelThrow: Logger] private (xa: Transactor[F]) exten
       .withUniqueGeneratedKeys[UUID]("id")
       .transact(xa)
 
-  override def all(): F[List[Job]] =
+  override def all(): fs2.Stream[F, Job] =
     sql"""
         SELECT
             id,
@@ -98,7 +98,7 @@ class LiveJobs[F[_]: MonadCancelThrow: Logger] private (xa: Transactor[F]) exten
         WHERE active = true
         """
       .query[Job]
-      .to[List]
+      .stream
       .transact(xa)
 
   override def all(filter: JobFilter, pagination: Pagination): F[List[Job]] = {
@@ -205,13 +205,7 @@ class LiveJobs[F[_]: MonadCancelThrow: Logger] private (xa: Transactor[F]) exten
       .flatMap(_ => find(id))
 
   override def activate(id: UUID): F[Int] =
-    sql"""
-      UPDATE jobs
-      SET
-        active=true
-      WHERE id=$id
-    """.update.run
-      .transact(xa)
+    sql"UPDATE jobs SET active=true WHERE id=$id".update.run.transact(xa)
 
   override def delete(id: UUID): F[Int] =
     sql"""
